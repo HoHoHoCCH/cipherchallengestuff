@@ -1,0 +1,11 @@
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, Arial, sans-serif; margin: 0; padding: 0; }
+      header { padding: 12px 16px; background: #2d2d2d; color: #f0f0f0; }
+      main { padding: 16px; display: grid; gap: 12px; max-width: 1000px; margin: 0 auto; }
+      textarea { width: 100%; min-height: 160px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; padding: 10px; }
+      button { padding: 10px 14px; font-weight: 600; cursor: pointer; }
+      .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .status { opacity: 0.8; font-size: 0.95em; }
+      pre#output { background: #111; color: #d6ffd6; padding: 12px; min-height: 200px; overflow: auto; }
+      .muted { opacity: 0.7; }
+      .note { font-size: 0.9em; }
