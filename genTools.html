@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Text Tools</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="genTools.css">
+  </head>
+  <body>
+    <header>
+      <h1 style="margin:0; font-size:18px;">general text tools</h1>
+      <nav>
+        <a href="index.html">cracker</a>
+        <a href="decrypt.html" >decrypts</a>
+        <a href="genTools.html" class="nav-active">text tools</a>
+      </nav>
+    </header>
+    <main>
+
+      <div class="section" id="deleter">
+        <h2 style="margin:0; font-size:16px;">delete characters</h2>
+        <label for="del_in">input</label>
+        <textarea id="del_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <input id="del_chars" class="short" type="text" placeholder="characters to delete (eg abc 123 .,!)">
+          <label><input id="del_spaces" type="checkbox"> also remove spaces</label>
+          <button id="del_btn">delete</button>
+        </div>
+        <label for="del_out">output</label>
+        <pre id="del_out" class="outbox"></pre>
+      </div>
+
+      <div class="section" id="highlighter">
+        <h2 style="margin:0; font-size:16px;">highlight strings</h2>
+        <label for="hl_in">input</label>
+        <textarea id="hl_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <input id="hl_terms" class="short" type="text" placeholder="terms (you can use comma separated values)">
+          <label><input id="hl_case" type="checkbox"> case sensitive</label>
+          <button id="hl_btn">highlight</button>
+        </div>
+        <div id="hl_out" class="outbox"></div>
+      </div>
+
+      <div class="section" id="compare">
+        <h2 style="margin:0; font-size:16px;">compare two strings</h2>
+        <label for="cmp_a">A</label>
+        <textarea id="cmp_a" placeholder="string A"></textarea>
+        <label for="cmp_b">B</label>
+        <textarea id="cmp_b" placeholder="string B"></textarea>
+        <div class="row">
+          <button id="cmp_btn">compare</button>
+        </div>
+        <div id="cmp_out" class="outbox"></div>
+        <div class="mini">green = same, red = different</div>
+      </div>
+
+      <div class="section" id="freq">
+        <h2 style="margin:0; font-size:16px;">frequency analysis</h2>
+        <label for="fq_in">input</label>
+        <textarea id="fq_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <button id="fq_btn">check</button>
+          <span class="status muted" id="fq_status"></span>
+        </div>
+        <canvas id="fq_canvas" class="chart" aria-label="frequency chart"></canvas>
+        <div id="fq_out" class="mini"></div>
+      </div>
+
+      <div class="section" id="reverse">
+        <h2 style="margin:0; font-size:16px;">reverse text</h2>
+        <label for="rv_in">input</label>
+        <textarea id="rv_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <button id="rv_btn">reverse</button>
+        </div>
+        <label for="rv_out">output</label>
+        <pre id="rv_out" class="outbox"></pre>
+      </div>
+
+    </main>
+
+    <script src="genTools.js"></script>
+  </body>
+  </html>
