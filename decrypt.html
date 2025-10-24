@@ -16,13 +16,48 @@
     </header>
     <main>
         theres gonna be so much decryption tools here
-<br>
-ur gonna be telling me "ching ho i cant take it anymore theres too many decryption tools"
-<br>
-and im gonna be like "we gotta keep adding more decryption tools "
-<br>
-gurt
-    </main>
+        <br>
+        ur gonna be telling me "ching ho i cant take it anymore theres too many decryption tools"
+        <br>
+        and im gonna be like "we gotta keep adding more decryption tools "
+        <br>
+        gurt
+
+      <div class="section" id="ceaser">
+        <h2 style="margin:0; font-size:16px;">Ceaser</h2>
+        <textarea id="ceaser_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <input id="ceaser_shift" type="number" placeholder="shift">
+          <button id="ceaser_btn">run</button>
+        </div>
+        <label for="ceaser_out">output</label>
+        <pre id="ceaser_out" class="outbox"></pre>
+      </div>
+
+      <div class="section" id="mono">
+        <h2 style="margin:0; font-size:16px;">Monoalphabetic</h2>
+        <textarea id="mono_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <input id="mono_key" type="text" placeholder="alphabet" value="">
+          <button id="mono_btn">run</button>
+        </div>
+        <label for="mono_out">output</label>
+        <pre id="mono_out" class="outbox"></pre>
+      </div>
+
+      <div class="section" id="transposition">
+        <h2 style="margin:0; font-size:16px;">Block Transposition</h2>
+        <textarea id="transposition_in" placeholder="paste here"></textarea>
+        <div class="row">
+          <input id="transposition_key" type="text" placeholder="key (e.g. 1324)">
+          <button id="transposition_btn">run</button>
+        </div>
+        <label for="transposition_out">output</label>
+        <pre id="transposition_out" class="outbox"></pre>
+      </div>
+
+    <script>document.getElementById("mono_key").value = "abcdefghijklmnopqrstuvwxyz";</script>
+    <script src="decrypt.js"></script>
   </body>
   </html>
 
