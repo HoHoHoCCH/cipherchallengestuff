@@ -216,3 +216,56 @@ def vigenere_manual(text, key):
         else:
             out.append(ch)
     return ''.join(out)
+
+def hill2_manual(text, key_digits):
+    if not key_digits or len(key_digits) != 4:
+        return ''
+    try:
+        a, b, c, d = [int(x) % 26 for x in key_digits]
+    except Exception:
+        return ''
+
+    det = (a * d - b * c) % 26
+    inv_det = None
+    if det % 2 == 1 and det % 13 != 0:
+        for x in range(1, 26):
+            if (det * x) % 26 == 1:
+                inv_det = x
+                break
+    if inv_det is None:
+        return 'invalid key'
+
+    ia = (inv_det * d) % 26
+    ib = (inv_det * (-b)) % 26
+    ic = (inv_det * (-c)) % 26
+    id_ = (inv_det * a) % 26
+
+    letters = [ch for ch in text if ch.isalpha()]
+    if not letters:
+        return text
+    upper = ''.join(ch.upper() for ch in letters)
+    if len(upper) % 2 == 1:
+        upper += 'X'
+
+    nums = [ord(ch) - 65 for ch in upper]
+    out_chars = []
+    for i in range(0, len(nums), 2):
+        x, y = nums[i], nums[i + 1]
+        p0 = (ia * x + ib * y) % 26
+        p1 = (ic * x + id_ * y) % 26
+        out_chars.append(chr(65 + p0))
+        out_chars.append(chr(65 + p1))
+
+
+    plain_letters = ''.join(out_chars)[:len(letters)]
+
+
+    it = iter(plain_letters)
+    out = []
+    for ch in text:
+        if ch.isalpha():
+            p = next(it)
+            out.append(p.lower() if ch.islower() else p)
+        else:
+            out.append(ch)
+    return ''.join(out)

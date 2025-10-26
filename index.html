@@ -24,6 +24,20 @@
         <span id="status" class="status muted">loading all them stuff</span>
       </div>
 
+      <div class="section" id="which-ciphers">
+        <h2 style="margin:0; font-size:16px;">select ciphers to try to crack</h2>
+        <div class="row" style="flex-wrap: wrap; gap: 12px;">
+          <label><input type="checkbox" id="cb_caesar" checked> Caesar</label>
+          <label><input type="checkbox" id="cb_block" checked> Block Transposition</label>
+          <label><input type="checkbox" id="cb_columnar" checked> Columnar</label>
+          <label><input type="checkbox" id="cb_mono" checked> Monoalphabetic</label>
+          <label><input type="checkbox" id="cb_vig" checked> Vignere</label>
+          <label><input type="checkbox" id="cb_hill" checked> Hill 2x2</label>
+          <label><input type="checkbox" id="cb_rail" checked> Railfence</label>
+        </div>
+        <p>hill 2x2 and column take the longest fyi </p>
+      </div>
+
       <label for="output">script output</label>
       <pre id="output" aria-live="polite" aria-busy="false">if u see this then its loading so be patient like a good boy</pre>
 

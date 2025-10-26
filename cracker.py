@@ -4,6 +4,7 @@ import re
 from collections import Counter
 import heapq
 import time
+import os
 
 from colorama import Fore, Style, init
 
@@ -257,7 +258,7 @@ def railfenceDecrypt(ciphertext: str, search_area: int = 100, start_key: int = 2
     return best_candidate
 
 
-def hill2_bruteforce(ciphertext: str, scorer, sample_letters: int = 60, refine_top: int = 3):
+def hill2x2(ciphertext: str, scorer, sample_letters: int = 60, refine_top: int = 3):
     letters = [ch.upper() for ch in ciphertext if ch.isalpha()]
     if len(letters) < 2:
         return ciphertext, None
@@ -348,77 +349,95 @@ if __name__ == "__main__":
     times = {}
     print(Fore.CYAN + "ADD CIPHERTEXT:")
     cipher = multiLineInput().strip()
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "\n-----Caesar Cipher-----" + Style.RESET_ALL)
-    score, shift, plain = caesar_crack(cipher, scorer)
-    print(f"{Fore.GREEN}shift:{Style.RESET_ALL} {shift}")
-    print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
-    print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{plain}\n")
-    times['caesar'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['caesar']:.2f}s\n")
 
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "-----Block Transposition-----" + Style.RESET_ALL)
-    permutation_results = crack_permutations(cipher, scorer, min_k=6, max_k=6, top_n=1)
-    if not permutation_results:
-        print(Fore.RED + "no permutation candidates found\n")
-    else:
-        score, klen, perm, pt = permutation_results[0]
+
+    run = {
+        'CAESAR': os.environ.get('RUN_CAESAR', '1') == '1',
+        'BLOCK': os.environ.get('RUN_BLOCK', '1') == '1',
+        'COLUMNAR': os.environ.get('RUN_COLUMNAR', '1') == '1',
+        'MONO': os.environ.get('RUN_MONO', '1') == '1',
+        'VIG': os.environ.get('RUN_VIG', '1') == '1',
+        'HILL': os.environ.get('RUN_HILL', '1') == '1',
+        'RAIL': os.environ.get('RUN_RAIL', '1') == '1',
+    }
+    if run['CAESAR']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "\n-----Caesar Cipher-----" + Style.RESET_ALL)
+        score, shift, plain = caesar_crack(cipher, scorer)
+        print(f"{Fore.GREEN}shift:{Style.RESET_ALL} {shift}")
         print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
-        print(f"{Fore.GREEN}key len:{Style.RESET_ALL} {klen}")
-        print(f"{Fore.GREEN}key:{Style.RESET_ALL} {tuple(x+1 for x in perm)}")
-        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{pt}\n")
-    times['block transposition'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['block transposition']:.2f}s\n")
+        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{plain}\n")
+        times['caesar'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['caesar']:.2f}s\n")
 
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "-----Columnar Transposition-----" + Style.RESET_ALL)
-    col_results = crack_columnar_transposition(cipher, scorer, min_k=2, max_k=7, top_n=1)
-    if not col_results:
-        print(Fore.RED + "no columnar candidates found\n")
-    else:
-        score, klen, perm, pt = col_results[0]
-        print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
-        print(f"{Fore.GREEN}columns:{Style.RESET_ALL} {klen}")
-        print(f"{Fore.GREEN}key:{Style.RESET_ALL} {tuple(x+1 for x in perm)}")
-        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{pt}\n")
-    times['column transposition'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['column transposition']:.2f}s\n")
+    if run['BLOCK']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "-----Block Transposition-----" + Style.RESET_ALL)
+        permutation_results = crack_permutations(cipher, scorer, min_k=6, max_k=6, top_n=1)
+        if not permutation_results:
+            print(Fore.RED + "no permutation candidates found\n")
+        else:
+            score, klen, perm, pt = permutation_results[0]
+            print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
+            print(f"{Fore.GREEN}key len:{Style.RESET_ALL} {klen}")
+            print(f"{Fore.GREEN}key:{Style.RESET_ALL} {tuple(x+1 for x in perm)}")
+            print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{pt}\n")
+        times['block transposition'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['block transposition']:.2f}s\n")
 
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "-----Monoalphabetic Cipher-----" + Style.RESET_ALL)
-    plain_text, key_map = crack_monoalpha(cipher, scorer)
-    print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{plain_text}\n")
-    print(f"{Fore.GREEN}key alphabet:{Style.RESET_ALL}\n{key_map}\n")
-    times['monoalphabetic'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['monoalphabetic']:.2f}s\n")
+    if run['COLUMNAR']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "-----Columnar Transposition-----" + Style.RESET_ALL)
+        col_results = crack_columnar_transposition(cipher, scorer, min_k=2, max_k=7, top_n=1)
+        if not col_results:
+            print(Fore.RED + "no columnar candidates found\n")
+        else:
+            score, klen, perm, pt = col_results[0]
+            print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
+            print(f"{Fore.GREEN}columns:{Style.RESET_ALL} {klen}")
+            print(f"{Fore.GREEN}key:{Style.RESET_ALL} {tuple(x+1 for x in perm)}")
+            print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{pt}\n")
+        times['column transposition'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['column transposition']:.2f}s\n")
 
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "-----Vigenere Cipher-----" + Style.RESET_ALL)
-    klen, key, text = vignere(cipher, 2, 12)
-    print(f"{Fore.GREEN}key length:{Style.RESET_ALL} {klen}")
-    print(f"{Fore.GREEN}key:{Style.RESET_ALL} {key}")
-    print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL} {text}")
-    times['vigenere'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['vigenere']:.2f}s\n")
+    if run['MONO']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "-----Monoalphabetic Cipher-----" + Style.RESET_ALL)
+        plain_text, key_map = crack_monoalpha(cipher, scorer)
+        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{plain_text}\n")
+        print(f"{Fore.GREEN}key alphabet:{Style.RESET_ALL}\n{key_map}\n")
+        times['monoalphabetic'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['monoalphabetic']:.2f}s\n")
 
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "-----Hill 2x2-----" + Style.RESET_ALL)
-    hill_text, hill_key = hill2_bruteforce(cipher, scorer, sample_letters=80, refine_top=5)
-    if hill_key is None:
-        print(Fore.RED + "no hill candidates found\n")
-    else:
-        print(f"{Fore.GREEN}key:{Style.RESET_ALL} {hill_key}")
-        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{hill_text}\n")
-    times['2x2 hill'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['2x2 hill']:.2f}s\n")
+    if run['VIG']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "-----Vigenere Cipher-----" + Style.RESET_ALL)
+        klen, key, text = vignere(cipher, 2, 12)
+        print(f"{Fore.GREEN}key length:{Style.RESET_ALL} {klen}")
+        print(f"{Fore.GREEN}key:{Style.RESET_ALL} {key}")
+        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL} {text}")
+        times['vigenere'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['vigenere']:.2f}s\n")
 
-    t0 = time.perf_counter()
-    print(Fore.YELLOW + "-----Railfence Cipher-----" + Style.RESET_ALL)
-    rf = railfenceDecrypt(cipher)
-    print(rf)
-    times['railfence'] = time.perf_counter() - t0
-    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['railfence']:.2f}s\n")
+    if run['HILL']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "-----Hill 2x2 ONLY-----" + Style.RESET_ALL)
+        hill_text, hill_key = hill2x2(cipher, scorer, sample_letters=80, refine_top=5)
+        if hill_key is None:
+            print(Fore.RED + "no hill candidates found\n")
+        else:
+            print(f"{Fore.GREEN}key:{Style.RESET_ALL} {hill_key}")
+            print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{hill_text}\n")
+        times['2x2 hill'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['2x2 hill']:.2f}s\n")
+
+    if run['RAIL']:
+        t0 = time.perf_counter()
+        print(Fore.YELLOW + "-----Railfence Cipher-----" + Style.RESET_ALL)
+        rf = railfenceDecrypt(cipher)
+        print(rf)
+        times['railfence'] = time.perf_counter() - t0
+        print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['railfence']:.2f}s\n")
 
     total = time.perf_counter() - overall_start
     print(Fore.CYAN + "attempts finished" + Style.RESET_ALL)

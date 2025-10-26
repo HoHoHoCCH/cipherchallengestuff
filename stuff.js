@@ -3,6 +3,14 @@
         status: document.getElementById('status'),
         output: document.getElementById('output'),
         cipher: document.getElementById('cipher'),
+
+        cbCaesar: document.getElementById('cb_caesar'),
+        cbBlock: document.getElementById('cb_block'),
+        cbColumnar: document.getElementById('cb_columnar'),
+        cbMono: document.getElementById('cb_mono'),
+        cbVig: document.getElementById('cb_vig'),
+        cbHill: document.getElementById('cb_hill'),
+        cbRail: document.getElementById('cb_rail'),
       };
 
       let pyodideReadyPromise = null;
@@ -85,11 +93,24 @@
         // multiLineInput ends on a line 'p' — we auto-append it.
         lines.push('p');
 
+        const flags = {
+          RUN_CAESAR: !!els.cbCaesar?.checked,
+          RUN_BLOCK: !!els.cbBlock?.checked,
+          RUN_COLUMNAR: !!els.cbColumnar?.checked,
+          RUN_MONO: !!els.cbMono?.checked,
+          RUN_VIG: !!els.cbVig?.checked,
+          RUN_HILL: !!els.cbHill?.checked,
+          RUN_RAIL: !!els.cbRail?.checked,
+        };
+
         const py = `\n` +
 `import sys, io, builtins, runpy\n` +
 `buf = io.StringIO()\n` +
 `sys.stdout = buf\n` +
 `sys.stderr = buf\n` +
+`import os, json\n` +
+`_flags = json.loads(${JSON.stringify(JSON.stringify(flags))})\n` +
+`for k,v in _flags.items(): os.environ[str(k)] = '1' if v else '0'\n` +
 `_lines = ${JSON.stringify(lines)}\n` +
 `_it = iter(_lines)\n` +
 `builtins.input = lambda: next(_it)\n` +
