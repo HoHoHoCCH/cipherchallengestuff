@@ -1,8 +1,9 @@
-# Okay, imports up top. Pulling in everything we'll need.
 import itertools
 import string
 import re
 from collections import Counter
+import heapq
+import time
 
 from colorama import Fore, Style, init
 
@@ -58,6 +59,68 @@ def crack_permutations(ciphertext, scorer, min_k=2, max_k=6, top_n=5):
             display = ''.join(next(it) if ch.isalpha() else ch for ch in ciphertext)
             results.append((score, k, perm, display))
 
+
+    results.sort(reverse=True, key=lambda x: x[0])
+    seen, final = set(), []
+    for score, k, perm, disp in results:
+        key = ''.join(c for c in disp.upper() if c.isalpha())
+        if key in seen:
+            continue
+        seen.add(key)
+        final.append((score, k, perm, disp))
+        if len(final) >= top_n:
+            break
+    return final
+
+
+def crack_columnar_transposition(ciphertext, scorer, min_k=2, max_k=6, top_n=3):
+
+    clean = ''.join(c for c in ciphertext.upper() if c.isalpha())
+    if len(clean) < 4:
+        return []
+
+    results = []
+    for k in range(min_k, max_k + 1):
+        n = len(clean)
+        q, r = divmod(n, k) 
+
+
+        for perm in itertools.permutations(range(k)):
+            chunk_lens = [(q + 1) if col < r else q for col in perm]
+
+
+            idx = 0
+            chunks = []
+            valid = True
+            for L in chunk_lens:
+                if idx + L > n:
+                    valid = False
+                    break
+                chunks.append(list(clean[idx: idx + L]))
+                idx += L
+            if not valid or idx != n:
+                continue
+
+
+            columns = [None] * k
+            for pos, col in enumerate(perm):
+                columns[col] = chunks[pos]
+
+            reconstructed = []
+            max_h = q + 1 
+            for row in range(max_h):
+                for c in range(k):
+                    col = columns[c]
+                    if row < len(col):
+                        reconstructed.append(col[row])
+
+            candidate = ''.join(reconstructed)
+            score = scorer(candidate)
+
+
+            it = iter(candidate)
+            display = ''.join(next(it) if ch.isalpha() else ch for ch in ciphertext)
+            results.append((score, k, perm, display))
 
     results.sort(reverse=True, key=lambda x: x[0])
     seen, final = set(), []
@@ -147,55 +210,155 @@ def crack_monoalpha(ciphertext, scorer):
 
 
 def railfenceDecrypt(ciphertext: str, search_area: int = 100, start_key: int = 2):
-    results = []
-    n = len(ciphertext)
+    stext = ciphertext
+    n = len(stext)
+    if n == 0:
+        return stext
+
+    max_rails = min(start_key + search_area - 1, max(2, min(12, n // 2)))
+
     best = -1e19
-    bestGuess = ""
-    for key in range(start_key, start_key + search_area):
-        if key < 2:
-            continue
+    best_candidate = stext
 
-        pattern = []
-        rail, direction = 0, 1
-        for _ in range(n):
-            pattern.append(rail)
-            rail += direction
-            if rail == 0 or rail == key - 1:
-                direction *= -1
+    for rails in range(max(2, start_key), max_rails + 1):
+        pattern = [0] * n
+        r, d = 0, 1
+        for i in range(n):
+            pattern[i] = r
+            r += d
+            if r == 0 or r == rails - 1:
+                d *= -1
+
+        counts = [0] * rails
+        for ridx in pattern:
+            counts[ridx] += 1
+
+        rails_str = [None] * rails
+        idx = 0
+        for ri in range(rails):
+            c = counts[ri]
+            rails_str[ri] = stext[idx: idx + c]
+            idx += c
+
+        ptr = [0] * rails
+        out_chars = []
+        for ridx in pattern:
+            s = rails_str[ridx]
+            out_chars.append(s[ptr[ridx]])
+            ptr[ridx] += 1
+        candidate = ''.join(out_chars)
+
+        letters_only = ''.join(ch for ch in candidate.upper() if ch.isalpha())
+        s = scorer(letters_only)
+        if s > best:
+            best = s
+            best_candidate = candidate
+
+    return best_candidate
 
 
-        counts = [pattern.count(r) for r in range(key)]
+def hill2_bruteforce(ciphertext: str, scorer, sample_letters: int = 60, refine_top: int = 3):
+    letters = [ch.upper() for ch in ciphertext if ch.isalpha()]
+    if len(letters) < 2:
+        return ciphertext, None
+    L = ''.join(letters)
 
 
-        rails, i = [], 0
-        for c in counts:
-            rails.append(list(ciphertext[i:i + c]))
-            i += c
+    def to_pairs_num(s: str):
+        n = len(s) - (len(s) % 2)
+        nums = [ord(c) - 65 for c in s[:n]]
+        return list(zip(nums[0::2], nums[1::2]))
+
+    sample_len = min(len(L) - (len(L) % 2), max(2, sample_letters - (sample_letters % 2)))
+    sample_pairs = to_pairs_num(L[:sample_len])
+    full_pairs = to_pairs_num(L)
 
 
-        plaintext = ''.join(rails[pattern[j]].pop(0) for j in range(n))
-        score = scorer(plaintext)
-        if score > best:
-            best = score
-            bestGuess = plaintext
+    inv26 = [0] * 26
+    for a in range(26):
 
-    return bestGuess
+        if (a & 1) and (a % 13 != 0):
+ 
+            for x in range(1, 26):
+                if (a * x) % 26 == 1:
+                    inv26[a] = x
+                    break
+        else:
+            inv26[a] = 0
+
+    top = []
+    push, pop = heapq.heappush, heapq.heappop
+
+
+    for a in range(26):
+        for b in range(26):
+            for c in range(26):
+                for d in range(26):
+                    det = (a * d - b * c) % 26
+                    inv_det = inv26[det]
+                    if inv_det == 0:
+                        continue
+                    ia = (inv_det * d) % 26
+                    ib = (inv_det * (-b)) % 26
+                    ic = (inv_det * (-c)) % 26
+                    id_ = (inv_det * a) % 26
+
+
+                    out = []
+                    for x, y in sample_pairs:
+                        out.append(chr(65 + ((ia * x + ib * y) % 26)))
+                        out.append(chr(65 + ((ic * x + id_ * y) % 26)))
+                    s = scorer(''.join(out))
+                    if len(top) < refine_top:
+                        push(top, (s, (ia, ib, ic, id_)))
+                    elif s > top[0][0]:
+                        pop(top)
+                        push(top, (s, (ia, ib, ic, id_)))
+
+
+    best_s, best_plain, best_key = -1e19, None, None
+    for s0, (ia, ib, ic, id_) in sorted(top, reverse=True):
+        out = []
+        for x, y in full_pairs:
+            out.append(chr(65 + ((ia * x + ib * y) % 26)))
+            out.append(chr(65 + ((ic * x + id_ * y) % 26)))
+        cand = ''.join(out)[:len(L)]
+        sfull = scorer(cand)
+        if sfull > best_s:
+            best_s, best_plain, best_key = sfull, cand, (ia, ib, ic, id_)
+
+    if best_plain is None:
+        return ciphertext, None
+
+
+    it = iter(best_plain)
+    out = []
+    for ch in ciphertext:
+        if ch.isalpha():
+            p = next(it)
+            out.append(p.lower() if ch.islower() else p)
+        else:
+            out.append(ch)
+    return ''.join(out), best_key
 
 if __name__ == "__main__":
     init(autoreset=True)
-
     scorer = load_score()
-
+    overall_start = time.perf_counter()
+    times = {}
     print(Fore.CYAN + "ADD CIPHERTEXT:")
     cipher = multiLineInput().strip()
-
+    t0 = time.perf_counter()
     print(Fore.YELLOW + "\n-----Caesar Cipher-----" + Style.RESET_ALL)
     score, shift, plain = caesar_crack(cipher, scorer)
     print(f"{Fore.GREEN}shift:{Style.RESET_ALL} {shift}")
     print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
     print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{plain}\n")
+    times['caesar'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['caesar']:.2f}s\n")
 
-    print(Fore.YELLOW + "-----Permutation Cipher-----" + Style.RESET_ALL)
+    t0 = time.perf_counter()
+    print(Fore.YELLOW + "-----Block Transposition-----" + Style.RESET_ALL)
     permutation_results = crack_permutations(cipher, scorer, min_k=6, max_k=6, top_n=1)
     if not permutation_results:
         print(Fore.RED + "no permutation candidates found\n")
@@ -205,19 +368,61 @@ if __name__ == "__main__":
         print(f"{Fore.GREEN}key len:{Style.RESET_ALL} {klen}")
         print(f"{Fore.GREEN}key:{Style.RESET_ALL} {tuple(x+1 for x in perm)}")
         print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{pt}\n")
+    times['block transposition'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['block transposition']:.2f}s\n")
 
+    t0 = time.perf_counter()
+    print(Fore.YELLOW + "-----Columnar Transposition-----" + Style.RESET_ALL)
+    col_results = crack_columnar_transposition(cipher, scorer, min_k=2, max_k=7, top_n=1)
+    if not col_results:
+        print(Fore.RED + "no columnar candidates found\n")
+    else:
+        score, klen, perm, pt = col_results[0]
+        print(f"{Fore.GREEN}score:{Style.RESET_ALL} {score:.2f}")
+        print(f"{Fore.GREEN}columns:{Style.RESET_ALL} {klen}")
+        print(f"{Fore.GREEN}key:{Style.RESET_ALL} {tuple(x+1 for x in perm)}")
+        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{pt}\n")
+    times['column transposition'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['column transposition']:.2f}s\n")
+
+    t0 = time.perf_counter()
     print(Fore.YELLOW + "-----Monoalphabetic Cipher-----" + Style.RESET_ALL)
     plain_text, key_map = crack_monoalpha(cipher, scorer)
     print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{plain_text}\n")
     print(f"{Fore.GREEN}key alphabet:{Style.RESET_ALL}\n{key_map}\n")
+    times['monoalphabetic'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['monoalphabetic']:.2f}s\n")
 
+    t0 = time.perf_counter()
     print(Fore.YELLOW + "-----Vigenere Cipher-----" + Style.RESET_ALL)
     klen, key, text = vignere(cipher, 2, 12)
     print(f"{Fore.GREEN}key length:{Style.RESET_ALL} {klen}")
     print(f"{Fore.GREEN}key:{Style.RESET_ALL} {key}")
     print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL} {text}")
+    times['vigenere'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['vigenere']:.2f}s\n")
 
+    t0 = time.perf_counter()
+    print(Fore.YELLOW + "-----Hill 2x2-----" + Style.RESET_ALL)
+    hill_text, hill_key = hill2_bruteforce(cipher, scorer, sample_letters=80, refine_top=5)
+    if hill_key is None:
+        print(Fore.RED + "no hill candidates found\n")
+    else:
+        print(f"{Fore.GREEN}key:{Style.RESET_ALL} {hill_key}")
+        print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL}\n{hill_text}\n")
+    times['2x2 hill'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['2x2 hill']:.2f}s\n")
+
+    t0 = time.perf_counter()
     print(Fore.YELLOW + "-----Railfence Cipher-----" + Style.RESET_ALL)
-    print(railfenceDecrypt(cipher))
+    rf = railfenceDecrypt(cipher)
+    print(rf)
+    times['railfence'] = time.perf_counter() - t0
+    print(f"{Fore.CYAN}time:{Style.RESET_ALL} {times['railfence']:.2f}s\n")
 
+    total = time.perf_counter() - overall_start
     print(Fore.CYAN + "attempts finished" + Style.RESET_ALL)
+    print(Fore.YELLOW + "\n-----times-----" + Style.RESET_ALL)
+    for name, secs in times.items():
+        print(f"{Fore.GREEN}{name}:{Style.RESET_ALL} {secs:.2f}s")
+    print(f"{Fore.GREEN}Total:{Style.RESET_ALL} {total:.2f}s")

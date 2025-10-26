@@ -16,8 +16,8 @@
       async function initPy() {
         setStatus('PLEASE WORK PLEASE I BEG DINGALINGALING ');
         const pyodide = await loadPyodide({
-          stdout: (s) => { /* optional: stream stdout */ },
-          stderr: (s) => { /* optional: stream stderr */ },
+          stdout: () => {},
+          stderr: () => {},
         });
 
         // Write a tiny 'colorama' shim so your code can import it without changes.

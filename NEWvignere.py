@@ -82,6 +82,7 @@ def vignere(text, minL=2, maxL=10):
         if avg_ic > best_ic:
             best_ic, key_length = avg_ic, k
 
+
     groups = ['' for _ in range(key_length)]
     for i, ch in enumerate(letters):
         groups[i % key_length] += ch
@@ -90,14 +91,21 @@ def vignere(text, minL=2, maxL=10):
 
 
     decrypted_text = []
-    for i, char in enumerate(text):
-        if char.isupper():
-            Dchar = chr((ord(char) - ord(key[i % len(key)]) + 26) % 26 + ord('A'))
-        elif char.islower():
-            Dchar = chr((ord(char) - ord(key[i % len(key)].lower()) + 26) % 26 + ord('a'))
-        else:
-            Dchar = char
-        decrypted_text.append(Dchar)
+    j = 0
 
-    return key_length, key, "".join(decrypted_text)
+    for char in text:
+        if char.isupper():
+            k = key[j % len(key)]
+            Dchar = chr((ord(char) - ord(k) + 26) % 26 + ord('A'))
+            decrypted_text.append(Dchar)
+            j += 1
+        elif char.islower():
+            k = key[j % len(key)].lower()
+            Dchar = chr((ord(char) - ord(k) + 26) % 26 + ord('a'))
+            decrypted_text.append(Dchar)
+            j += 1
+        else:
+            decrypted_text.append(char)
+
+    return key_length, key, ''.join(decrypted_text)
 

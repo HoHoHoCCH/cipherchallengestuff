@@ -56,6 +56,29 @@
         <pre id="transposition_out" class="outbox"></pre>
       </div>
 
+      <div class="section" id="columnar">
+        <h2 style="margin:0; font-size:16px;">Columnar Transposition</h2>
+        <textarea id="columnar_in" placeholder="ciphertext"></textarea>
+        <div class="row">
+          <input id="columnar_key" type="text" placeholder="read order (e.g. 3142)">
+          <button id="columnar_btn">run</button>
+        </div>
+        <label for="columnar_out">output</label>
+        <pre id="columnar_out" class="outbox"></pre>
+      </div>
+
+      <div class="section" id="railfence">
+        <h2 style="margin:0; font-size:16px;">railfence</h2>
+        <textarea id="rf_in" placeholder="ciphertext"></textarea>
+        <div class="row">
+          <input id="rf_rails" type="number" min="2" step="1" placeholder="rails (e.g. 3)">
+          <input id="rf_offset" type="number" min="0" step="1" placeholder="offset (e.g. 0)">
+          <button id="rf_btn">run</button>
+        </div>
+        <label for="rf_out">output</label>
+        <pre id="rf_out" class="outbox"></pre>
+      </div>
+
       <div class="section" id="playfair">
         <h2 style="margin:0; font-size:16px;">Playfair</h2>
         <textarea id="playfair_in" placeholder="ciphertext"></textarea>
@@ -65,6 +88,17 @@
         </div>
         <label for="playfair_out">output</label>
         <pre id="playfair_out" class="outbox"></pre>
+      </div>
+
+      <div class="section" id="vigenere">
+        <h2 style="margin:0; font-size:16px;">Vigenere</h2>
+        <textarea id="vigenere_in" placeholder="ciphertext"></textarea>
+        <div class="row">
+          <input id="vigenere_key" type="text" placeholder="keyword">
+          <button id="vigenere_btn">run</button>
+        </div>
+        <label for="vigenere_out">output</label>
+        <pre id="vigenere_out" class="outbox"></pre>
       </div>
 
       <div class="section" id="polybius">

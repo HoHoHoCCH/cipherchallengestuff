@@ -17,10 +17,26 @@
     transBtn: document.getElementById('transposition_btn'),
     transOut: document.getElementById('transposition_out'),
 
+    colIn: document.getElementById('columnar_in'),
+    colKey: document.getElementById('columnar_key'),
+    colBtn: document.getElementById('columnar_btn'),
+    colOut: document.getElementById('columnar_out'),
+
+    rfIn: document.getElementById('rf_in'),
+    rfRails: document.getElementById('rf_rails'),
+    rfOffset: document.getElementById('rf_offset'),
+    rfBtn: document.getElementById('rf_btn'),
+    rfOut: document.getElementById('rf_out'),
+
     playfairIn: document.getElementById('playfair_in'),
     playfairKey: document.getElementById('playfair_key'),
     playfairBtn: document.getElementById('playfair_btn'),
     playfairOut: document.getElementById('playfair_out'),
+
+    vigIn: document.getElementById('vigenere_in'),
+    vigKey: document.getElementById('vigenere_key'),
+    vigBtn: document.getElementById('vigenere_btn'),
+    vigOut: document.getElementById('vigenere_out'),
 
     polyIn: document.getElementById('polybius_in'),
     polyKey: document.getElementById('polybius_key'),
@@ -66,6 +82,19 @@
     return digits.split('').map(d => parseInt(d, 10));
   }
 
+  function parseColumnarKey(str) {
+    const arr = parseTranspositionKey(str);
+    if (!arr || arr.length === 0) return null;
+    const k = arr.length;
+    const set = new Set(arr);
+    if (set.size !== k) return null;
+    // Ensure values are 1..k
+    for (const v of arr) {
+      if (v < 1 || v > k) return null;
+    }
+    return arr;
+  }
+
 
   els.ceaserBtn?.addEventListener('click', async () => {
     els.ceaserBtn.disabled = true;
@@ -78,6 +107,23 @@
       els.ceaserOut.textContent = String(e);
     } finally {
       els.ceaserBtn.disabled = false;
+    }
+  });
+
+  // Railfence (Manual)
+  els.rfBtn?.addEventListener('click', async () => {
+    els.rfBtn.disabled = true;
+    try {
+      const msg = els.rfIn.value || '';
+      const rails = parseInt(els.rfRails.value || '0', 10);
+      const offset = parseInt(els.rfOffset.value || '0', 10) || 0;
+      if (!Number.isFinite(rails) || rails < 2) throw new Error('Rails must be >= 2');
+      const out = await callDecrypter('railfence_manual', [msg, rails, offset]);
+      els.rfOut.textContent = out;
+    } catch (e) {
+      els.rfOut.textContent = String(e);
+    } finally {
+      els.rfBtn.disabled = false;
     }
   });
 
@@ -109,6 +155,22 @@
       els.transOut.textContent = String(e);
     } finally {
       els.transBtn.disabled = false;
+    }
+  });
+
+  // Columnar (Manual)
+  els.colBtn?.addEventListener('click', async () => {
+    els.colBtn.disabled = true;
+    try {
+      const msg = els.colIn.value || '';
+      const key = parseColumnarKey(els.colKey.value);
+      if (!key) throw new Error('Key must be a permutation like 3142');
+      const out = await callDecrypter('columnar_manual', [msg, key]);
+      els.colOut.textContent = out;
+    } catch (e) {
+      els.colOut.textContent = String(e);
+    } finally {
+      els.colBtn.disabled = false;
     }
   });
 
@@ -147,6 +209,22 @@
       els.polyOut.textContent = String(e);
     } finally {
       els.polyBtn.disabled = false;
+    }
+  });
+
+  // Vigenere (Manual)
+  els.vigBtn?.addEventListener('click', async () => {
+    els.vigBtn.disabled = true;
+    try {
+      const msg = els.vigIn.value || '';
+      const key = (els.vigKey.value || '').trim();
+      if (!key) throw new Error('Keyword is required');
+      const out = await callDecrypter('vigenere_manual', [msg, key]);
+      els.vigOut.textContent = out;
+    } catch (e) {
+      els.vigOut.textContent = String(e);
+    } finally {
+      els.vigBtn.disabled = false;
     }
   });
 

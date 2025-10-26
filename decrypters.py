@@ -97,3 +97,122 @@ def polybius_decrypt(message, keyword):
 
     return "".join(plaintext)
 
+
+def playfair(ciphertext, key):
+    return playfair_decrypt(ciphertext, key)
+
+
+def polybius(message, keyword):
+
+    return polybius_decrypt(message, keyword)
+
+
+def columnar_manual(ciphertext, key_digits):
+    text = ''.join(c for c in ciphertext.upper() if c.isalpha())
+    if not key_digits:
+        return ''
+    k = len(key_digits)
+
+
+    try:
+        perm = [int(x) - 1 for x in key_digits]
+    except Exception:
+        return ''
+    if sorted(perm) != list(range(k)):
+        return ''
+
+    n = len(text)
+    if k <= 0 or n == 0:
+        return ''
+
+    q, r = divmod(n, k)
+
+
+    chunk_lens = [(q + 1) if col < r else q for col in perm]
+
+
+    idx = 0
+    chunks = []
+    for L in chunk_lens:
+        chunks.append(list(text[idx: idx + L]))
+        idx += L
+
+
+    columns = [None] * k
+    for pos, col in enumerate(perm):
+        columns[col] = chunks[pos]
+
+
+    out = []
+    max_h = q + 1
+    for row in range(max_h):
+        for c in range(k):
+            col = columns[c]
+            if row < len(col):
+                out.append(col[row])
+
+    return ''.join(out)
+
+
+def railfence_manual(ciphertext, rails, offset=0):
+    text = ''.join(c for c in ciphertext.upper() if c.isalpha())
+    n = len(text)
+    if rails is None or rails < 2 or n == 0:
+        return text
+
+    pattern = []
+    r, d = 0, 1
+    for _ in range(n):
+        pattern.append(r)
+        r += d
+        if r == 0 or r == rails - 1:
+            d *= -1
+
+
+    period = max(1, 2 * (rails - 1))
+    off = int(offset or 0) % period
+    if off:
+        rotated = pattern[off:] + pattern[:off]
+    else:
+        rotated = pattern
+
+
+    counts = [rotated.count(i) for i in range(rails)]
+    rails_data = []
+    idx = 0
+    for c in counts:
+        rails_data.append(list(text[idx: idx + c]))
+        idx += c
+
+
+    out = []
+    for rail_idx in rotated:
+        out.append(rails_data[rail_idx].pop(0))
+
+    return ''.join(out)
+
+
+def vigenere_manual(text, key):
+
+    if not key:
+        return text
+    key_shifts = [ord(c.upper()) - ord('A') for c in key if c.isalpha()]
+    if not key_shifts:
+        return text
+
+    out = []
+    j = 0
+    L = len(key_shifts)
+    for ch in text:
+        if ch.isalpha():
+            k = key_shifts[j % L]
+            if ch.isupper():
+                base = ord('A')
+                out.append(chr((ord(ch) - base - k) % 26 + base))
+            else:
+                base = ord('a')
+                out.append(chr((ord(ch) - base - k) % 26 + base))
+            j += 1
+        else:
+            out.append(ch)
+    return ''.join(out)
