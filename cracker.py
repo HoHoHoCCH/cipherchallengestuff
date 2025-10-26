@@ -146,6 +146,40 @@ def crack_monoalpha(ciphertext, scorer):
     return decrypted, key_string
 
 
+def railfenceDecrypt(ciphertext: str, search_area: int = 100, start_key: int = 2):
+    results = []
+    n = len(ciphertext)
+    best = -1e19
+    bestGuess = ""
+    for key in range(start_key, start_key + search_area):
+        if key < 2:
+            continue
+
+        pattern = []
+        rail, direction = 0, 1
+        for _ in range(n):
+            pattern.append(rail)
+            rail += direction
+            if rail == 0 or rail == key - 1:
+                direction *= -1
+
+
+        counts = [pattern.count(r) for r in range(key)]
+
+
+        rails, i = [], 0
+        for c in counts:
+            rails.append(list(ciphertext[i:i + c]))
+            i += c
+
+
+        plaintext = ''.join(rails[pattern[j]].pop(0) for j in range(n))
+        score = scorer(plaintext)
+        if score > best:
+            best = score
+            bestGuess = plaintext
+
+    return bestGuess
 
 if __name__ == "__main__":
     init(autoreset=True)
@@ -182,5 +216,8 @@ if __name__ == "__main__":
     print(f"{Fore.GREEN}key length:{Style.RESET_ALL} {klen}")
     print(f"{Fore.GREEN}key:{Style.RESET_ALL} {key}")
     print(f"{Fore.GREEN}decrypted:{Style.RESET_ALL} {text}")
+
+    print(Fore.YELLOW + "-----Railfence Cipher-----" + Style.RESET_ALL)
+    print(railfenceDecrypt(cipher))
 
     print(Fore.CYAN + "attempts finished" + Style.RESET_ALL)

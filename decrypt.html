@@ -56,8 +56,29 @@
         <pre id="transposition_out" class="outbox"></pre>
       </div>
 
+      <div class="section" id="playfair">
+        <h2 style="margin:0; font-size:16px;">Playfair</h2>
+        <textarea id="playfair_in" placeholder="ciphertext"></textarea>
+        <div class="row">
+          <input id="playfair_key" type="text" placeholder="keyword">
+          <button id="playfair_btn">run</button>
+        </div>
+        <label for="playfair_out">output</label>
+        <pre id="playfair_out" class="outbox"></pre>
+      </div>
+
+      <div class="section" id="polybius">
+        <h2 style="margin:0; font-size:16px;">Polybius</h2>
+        <textarea id="polybius_in" placeholder=""></textarea>
+        <div class="row">
+          <input id="polybius_key" type="text" placeholder="keyword">
+          <button id="polybius_btn">run</button>
+        </div>
+        <label for="polybius_out">output</label>
+        <pre id="polybius_out" class="outbox"></pre>
+      </div>
+
     <script>document.getElementById("mono_key").value = "abcdefghijklmnopqrstuvwxyz";</script>
     <script src="decrypt.js"></script>
   </body>
   </html>
-

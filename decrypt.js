@@ -16,6 +16,16 @@
     transKey: document.getElementById('transposition_key'),
     transBtn: document.getElementById('transposition_btn'),
     transOut: document.getElementById('transposition_out'),
+
+    playfairIn: document.getElementById('playfair_in'),
+    playfairKey: document.getElementById('playfair_key'),
+    playfairBtn: document.getElementById('playfair_btn'),
+    playfairOut: document.getElementById('playfair_out'),
+
+    polyIn: document.getElementById('polybius_in'),
+    polyKey: document.getElementById('polybius_key'),
+    polyBtn: document.getElementById('polybius_btn'),
+    polyOut: document.getElementById('polybius_out'),
   };
 
   let pyodideReadyPromise = null;
@@ -99,6 +109,44 @@
       els.transOut.textContent = String(e);
     } finally {
       els.transBtn.disabled = false;
+    }
+  });
+
+  // Playfair
+  els.playfairBtn?.addEventListener('click', async () => {
+    els.playfairBtn.disabled = true;
+    try {
+      const raw = (els.playfairIn.value || '').trim();
+      const key = (els.playfairKey.value || '').trim();
+      if (!key) throw new Error('Keyword is required');
+      const msg = raw.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+      if (msg.length % 2 !== 0) throw new Error('Ciphertext must have even length (letters only)');
+      const out = await callDecrypter('playfair', [msg, key]);
+      els.playfairOut.textContent = out;
+    } catch (e) {
+      els.playfairOut.textContent = String(e);
+    } finally {
+      els.playfairBtn.disabled = false;
+    }
+  });
+
+  // Polybius (Keyworded)
+  els.polyBtn?.addEventListener('click', async () => {
+    els.polyBtn.disabled = true;
+    try {
+      // Accept pairs with or without spaces
+      const raw = (els.polyIn.value || '').replace(/\s+/g, '');
+      const key = (els.polyKey.value || '').trim();
+      if (!/^[0-9]*$/.test(raw) || raw.length % 2 !== 0) {
+        throw new Error('Input must be digit pairs like 112233');
+      }
+      if (!key) throw new Error('Keyword is required');
+      const out = await callDecrypter('polybius', [raw, key]);
+      els.polyOut.textContent = out;
+    } catch (e) {
+      els.polyOut.textContent = String(e);
+    } finally {
+      els.polyBtn.disabled = false;
     }
   });
 
